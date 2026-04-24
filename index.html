@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseball BBQ — Father's Day Personalization Builder (Prototype)</title>
+<style>
+  :root {
+    --color-text-primary: #1a1a1a;
+    --color-text-secondary: #6b6b68;
+    --color-text-tertiary: #a0a09c;
+    --color-text-success: #0f6e56;
+    --color-text-info: #185FA5;
+    --color-background-primary: #ffffff;
+    --color-background-secondary: #f4f2eb;
+    --color-background-tertiary: #eeece4;
+    --color-background-success: #e1f5ee;
+    --color-background-info: #e6f1fb;
+    --color-border-tertiary: rgba(0,0,0,0.1);
+    --color-border-secondary: rgba(0,0,0,0.22);
+    --color-border-success: #9fe1cb;
+    --color-border-info: #b5d4f4;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    --font-serif: Georgia, 'Times New Roman', serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px; background: var(--color-background-tertiary); font-family: var(--font-sans); color: var(--color-text-primary); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+  .page { max-width: 720px; margin: 0 auto; background: var(--color-background-primary); border-radius: var(--border-radius-lg); padding: 28px 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+  .hidden { display: none; }
+  .nav-bar { max-width: 720px; margin: 0 auto 12px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--color-text-secondary); }
+  .nav-back { background: transparent; border: none; font-size: 12px; color: var(--color-text-secondary); cursor: pointer; padding: 4px 0; font-family: inherit; }
+  .nav-back:hover { color: var(--color-text-primary); }
+  .nav-step { font-weight: 500; }
+
+  /* === CONFIGURATOR === */
+  .pb-header { margin: 0 0 1rem; }
+  .pb-title { font-size: 20px; font-weight: 500; margin: 0 0 4px; }
+  .pb-sub { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+  .pb-tier { margin: 1.25rem 0 1.75rem; }
+  .pb-tier-row { display: grid; grid-template-columns: repeat(4, 1fr); text-align: center; margin-bottom: 12px; }
+  .pb-mk-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); }
+  .pb-mk.active .pb-mk-title { color: var(--color-text-primary); }
+  .pb-mk-price { font-size: 11px; color: var(--color-text-tertiary); }
+  .pb-track { position: relative; height: 4px; background: var(--color-background-secondary); border-radius: 2px; }
+  .pb-fill { position: absolute; inset: 0 auto 0 0; background: var(--color-text-primary); border-radius: 2px; width: 0; transition: width 0.4s ease; }
+  .pb-dots { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); pointer-events: none; }
+  .pb-dot-wrap { display: flex; justify-content: center; align-items: center; }
+  .pb-dot-wrap.q1 { justify-content: flex-start; padding-left: 12.5%; }
+  .pb-dot-wrap.q4 { justify-content: flex-end; }
+  .pb-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--color-background-primary); border: 1.5px solid var(--color-border-secondary); transition: all 0.25s; }
+  .pb-mk.active .pb-dot { background: var(--color-text-primary); border-color: var(--color-text-primary); }
+  .pb-layout { display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 16px; }
+  .pb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: stretch; }
+  .pb-card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 14px; display: flex; flex-direction: column; }
+  .pb-thumb { height: 72px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); margin-bottom: 10px; }
+  .pb-thumb svg { width: 30px; height: 30px; }
+  .pb-name { font-size: 13px; font-weight: 500; margin: 0 0 2px; }
+  .pb-price { font-size: 12px; color: var(--color-text-secondary); margin: 0 0 10px; }
+  .pb-vari-row { display: flex; gap: 4px; margin-bottom: 8px; }
+  .pb-vari { flex: 1; padding: 5px 2px; border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; background: transparent; font-size: 11px; cursor: pointer; color: var(--color-text-secondary); font-family: inherit; }
+  .pb-vari.sel { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+  .pb-engrave { font-size: 11px; padding: 6px 8px; margin-bottom: 8px; border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; width: 100%; display: none; font-family: inherit; color: var(--color-text-primary); background: var(--color-background-primary); }
+  .pb-engrave.show { display: block; }
+  .pb-add { font-size: 12px; padding: 8px; border: 0.5px solid var(--color-border-secondary); background: transparent; border-radius: 4px; cursor: pointer; color: var(--color-text-primary); margin-top: auto; font-family: inherit; transition: background 0.15s; }
+  .pb-add:hover { background: var(--color-background-secondary); }
+  .pb-side { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 16px; align-self: start; }
+  .pb-side-h { font-size: 13px; font-weight: 500; margin: 0 0 10px; }
+  .pb-cart { min-height: 50px; }
+  .pb-empty { font-size: 12px; color: var(--color-text-tertiary); padding: 12px 0; text-align: center; }
+  .pb-item { padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .pb-item:last-child { border-bottom: none; }
+  .pb-item-row { font-size: 12px; font-weight: 500; display: flex; justify-content: space-between; gap: 4px; }
+  .pb-item-meta { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+  .pb-rm { background: transparent; border: none; font-size: 12px; color: var(--color-text-tertiary); cursor: pointer; padding: 0 0 0 4px; font-family: inherit; line-height: 1; }
+  .pb-rm:hover { color: var(--color-text-primary); }
+  .pb-total { border-top: 0.5px solid var(--color-border-secondary); margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; font-size: 13px; font-weight: 500; }
+  .pb-unlocks { margin-top: 12px; padding-top: 10px; border-top: 0.5px solid var(--color-border-tertiary); }
+  .pb-unlock { font-size: 11px; display: flex; align-items: center; gap: 8px; padding: 3px 0; color: var(--color-text-tertiary); }
+  .pb-unlock.earned { color: var(--color-text-primary); }
+  .pb-check { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--color-border-secondary); flex-shrink: 0; }
+  .pb-unlock.earned .pb-check { background: var(--color-text-primary); border-color: var(--color-text-primary); }
+  .pb-cta { margin-top: 14px; width: 100%; padding: 10px; background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+  .pb-cta:hover { opacity: 0.85; }
+  .pb-cta:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pb-cutoff { font-size: 11px; color: var(--color-text-tertiary); text-align: center; margin: 6px 0 0; }
+
+  /* === CHECKOUT === */
+  .co-head { border-bottom: 0.5px solid var(--color-border-tertiary); padding-bottom: 14px; margin-bottom: 18px; }
+  .co-h-title { font-size: 20px; font-weight: 500; margin: 0 0 2px; }
+  .co-h-sub { font-size: 13px; color: var(--color-text-secondary); margin: 0; }
+  .co-h-sub strong { color: var(--color-text-primary); font-weight: 500; }
+  .co-earned { background: var(--color-background-success); border-radius: var(--border-radius-lg); padding: 14px 16px; margin-bottom: 22px; }
+  .co-e-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; flex-wrap: wrap; gap: 4px; }
+  .co-e-title { font-size: 14px; font-weight: 500; color: var(--color-text-success); margin: 0; }
+  .co-e-list { display: grid; gap: 4px; margin-bottom: 12px; }
+  .co-e-item { font-size: 12px; color: var(--color-text-success); display: flex; gap: 6px; }
+  .co-e-item::before { content: '✓'; font-weight: 500; }
+  .co-choice-block { border-top: 0.5px solid var(--color-border-success); padding-top: 10px; }
+  .co-choice-label { font-size: 12px; color: var(--color-text-success); margin: 0 0 6px; }
+  .co-choice-row { display: flex; gap: 6px; }
+  .co-choice { flex: 1; padding: 7px 10px; background: transparent; border: 0.5px solid var(--color-border-success); border-radius: var(--border-radius-md); font-size: 12px; color: var(--color-text-success); cursor: pointer; font-family: inherit; text-align: left; }
+  .co-choice.sel { background: var(--color-text-success); color: var(--color-background-success); }
+  .co-next { font-size: 11px; color: var(--color-text-success); margin: 10px 0 0; opacity: 0.75; }
+  .co-sec { margin-bottom: 22px; }
+  .co-sec-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .co-items { display: grid; gap: 10px; }
+  .co-item { display: grid; grid-template-columns: 52px 1fr auto; gap: 14px; padding: 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); align-items: start; }
+  .co-thumb { width: 52px; height: 52px; background: var(--color-background-primary); border-radius: var(--border-radius-md); display: flex; align-items: center; justify-content: center; color: var(--color-text-secondary); }
+  .co-thumb svg { width: 26px; height: 26px; }
+  .co-item-name { font-size: 13px; font-weight: 500; margin: 0 0 2px; }
+  .co-item-vari { font-size: 11px; color: var(--color-text-secondary); margin: 0 0 4px; }
+  .co-item-engrave { font-size: 12px; color: var(--color-text-primary); font-family: var(--font-serif); font-style: italic; margin: 0; padding: 4px 8px; background: var(--color-background-primary); border-radius: 4px; border-left: 2px solid var(--color-border-secondary); display: inline-block; }
+  .co-item-price { font-size: 13px; font-weight: 500; }
+  .co-toggle { display: flex; gap: 6px; margin-bottom: 12px; }
+  .co-tog { flex: 1; padding: 9px; border: 0.5px solid var(--color-border-tertiary); background: transparent; border-radius: var(--border-radius-md); font-size: 12px; color: var(--color-text-secondary); cursor: pointer; font-family: inherit; }
+  .co-tog.sel { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
+  .co-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .co-field { display: flex; flex-direction: column; gap: 3px; }
+  .co-field.full { grid-column: 1 / -1; }
+  .co-label { font-size: 11px; color: var(--color-text-tertiary); }
+  .co-input { padding: 9px 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 13px; background: var(--color-background-primary); color: var(--color-text-primary); font-family: inherit; }
+  .co-delivery { font-size: 12px; color: var(--color-text-success); display: flex; align-items: center; gap: 6px; padding: 8px 0 0; }
+  .co-delivery::before { content: '✓'; font-weight: 500; }
+  .co-gift { width: 100%; padding: 10px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 13px; resize: vertical; min-height: 64px; font-family: inherit; color: var(--color-text-primary); background: var(--color-background-primary); }
+  .co-guarantees { display: grid; gap: 8px; }
+  .co-g { padding: 10px 12px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); border-left: 2px solid var(--color-border-secondary); }
+  .co-g-title { font-size: 12px; font-weight: 500; margin: 0 0 2px; }
+  .co-g-desc { font-size: 11px; color: var(--color-text-secondary); margin: 0; }
+  .co-totals { padding: 16px 0; border-top: 0.5px solid var(--color-border-tertiary); border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 18px; }
+  .co-t-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--color-text-secondary); }
+  .co-t-row.grand { border-top: 0.5px solid var(--color-border-tertiary); margin-top: 8px; padding-top: 10px; font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .co-free { color: var(--color-text-success); }
+  .co-pay-shop { width: 100%; padding: 13px; background: #5A31F4; color: white; border: none; border-radius: var(--border-radius-md); font-size: 14px; font-weight: 500; cursor: pointer; margin-bottom: 8px; font-family: inherit; }
+  .co-pay-alt { width: 100%; padding: 12px; background: var(--color-text-primary); color: var(--color-background-primary); border: none; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit; }
+</style>
+</head>
+<body>
+
+<!-- CONFIGURATOR SCREEN -->
+<div id="configurator-screen">
+  <div class="nav-bar">
+    <span>Baseball BBQ</span>
+    <span class="nav-step">Step 1 of 2 — Build your gift</span>
+  </div>
+  <div class="page">
+    <div class="pb-header">
+      <p class="pb-title">Build a one-of-one Father's Day gift</p>
+      <p class="pb-sub">Start with one piece. The more you personalize, the more we give back.</p>
+    </div>
+
+    <div class="pb-tier">
+      <div class="pb-tier-row" id="pbMarkers">
+        <div class="pb-mk" data-threshold="60"><div class="pb-mk-title">Starter</div><div class="pb-mk-price">$60+</div></div>
+        <div class="pb-mk" data-threshold="100"><div class="pb-mk-title">All-Star</div><div class="pb-mk-price">$100+</div></div>
+        <div class="pb-mk" data-threshold="150"><div class="pb-mk-title">MVP</div><div class="pb-mk-price">$150+</div></div>
+        <div class="pb-mk" data-threshold="250"><div class="pb-mk-title">Hall of Famer</div><div class="pb-mk-price">$250+</div></div>
+      </div>
+      <div class="pb-track">
+        <div class="pb-fill" id="pbFill"></div>
+        <div class="pb-dots">
+          <div class="pb-dot-wrap q1"><div class="pb-dot" data-dot="0"></div></div>
+          <div class="pb-dot-wrap"><div class="pb-dot" data-dot="1"></div></div>
+          <div class="pb-dot-wrap"><div class="pb-dot" data-dot="2"></div></div>
+          <div class="pb-dot-wrap q4"><div class="pb-dot" data-dot="3"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pb-layout">
+      <div class="pb-grid" id="pbGrid"></div>
+      <div class="pb-side">
+        <p class="pb-side-h">Your build</p>
+        <div class="pb-cart" id="pbCart"><div class="pb-empty">Nothing added yet</div></div>
+        <div class="pb-total"><span>Subtotal</span><span id="pbTotal">$0.00</span></div>
+        <div class="pb-unlocks" id="pbUnlocks">
+          <div class="pb-unlock" data-threshold="60"><span class="pb-check"></span><span>Free shipping</span></div>
+          <div class="pb-unlock" data-threshold="100"><span class="pb-check"></span><span>Premium gift packaging</span></div>
+          <div class="pb-unlock" data-threshold="150"><span class="pb-check"></span><span>Rub or 2-day shipping</span></div>
+          <div class="pb-unlock" data-threshold="250"><span class="pb-check"></span><span>Lifetime heirloom warranty</span></div>
+        </div>
+        <button class="pb-cta" type="button" id="pbCta" disabled>Complete your build</button>
+        <p class="pb-cutoff">Order by June 7 for Father's Day delivery</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKOUT SCREEN -->
+<div id="checkout-screen" class="hidden">
+  <div class="nav-bar">
+    <button class="nav-back" id="navBack" type="button">← Back to build</button>
+    <span class="nav-step">Step 2 of 2 — Checkout</span>
+  </div>
+  <div class="page">
+    <div class="co-head">
+      <p class="co-h-title">Checkout</p>
+      <p class="co-h-sub">Ships by <strong>June 10</strong> — arrives in time for Father's Day on <strong>Sunday, June 21</strong></p>
+    </div>
+
+    <div class="co-earned" id="coEarned">
+      <div class="co-e-head">
+        <p class="co-e-title" id="coTierTitle">You unlocked MVP tier</p>
+      </div>
+      <div class="co-e-list" id="coUnlocksList"></div>
+      <div class="co-choice-block" id="coChoiceBlock">
+        <p class="co-choice-label" id="coChoiceLabel">Pick your MVP bonus:</p>
+        <div class="co-choice-row" id="coChoiceRow">
+          <button type="button" class="co-choice sel" data-choice="ship">2-day expedited shipping</button>
+          <button type="button" class="co-choice" data-choice="rub">Free Diamond Dirt Rub</button>
+        </div>
+        <p class="co-next" id="coNext"></p>
+      </div>
+    </div>
+
+    <div class="co-sec">
+      <p class="co-sec-title" id="coBuildTitle">Your build</p>
+      <div class="co-items" id="coItems"></div>
+    </div>
+
+    <div class="co-sec">
+      <p class="co-sec-title">Shipping</p>
+      <div class="co-toggle">
+        <button type="button" class="co-tog sel" data-ship="gift">Send as a gift</button>
+        <button type="button" class="co-tog" data-ship="me">Ship to me</button>
+      </div>
+      <div class="co-fields">
+        <div class="co-field full"><span class="co-label">Recipient name</span><input type="text" class="co-input" value="Robert Mitchell"></div>
+        <div class="co-field full"><span class="co-label">Street address</span><input type="text" class="co-input" placeholder="123 Main St"></div>
+        <div class="co-field"><span class="co-label">City</span><input type="text" class="co-input"></div>
+        <div class="co-field"><span class="co-label">ZIP</span><input type="text" class="co-input"></div>
+      </div>
+      <div class="co-delivery" id="coDelivery">Arrives June 10–14 with 2-day expedited shipping</div>
+    </div>
+
+    <div class="co-sec">
+      <p class="co-sec-title">Gift message (optional)</p>
+      <textarea class="co-gift" placeholder="We'll print this on a card tucked inside the gift box. Something like: &quot;Dad, you taught me how to throw a curveball and sear a ribeye. Happy Father's Day.&quot;"></textarea>
+    </div>
+
+    <div class="co-sec">
+      <p class="co-sec-title">Your guarantees</p>
+      <div class="co-guarantees" id="coGuarantees"></div>
+    </div>
+
+    <div class="co-totals" id="coTotals"></div>
+
+    <button type="button" class="co-pay-shop">Pay with Shop Pay</button>
+    <button type="button" class="co-pay-alt">Continue to payment</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Real catalog pricing from Baseball BBQ
+  var PRODUCTS = [
+    {
+      id: 'cb',
+      name: 'Home Plate Cutting Board',
+      icon: 'M4 6h16v12H4z M8 6v12 M16 6v12',
+      variants: [
+        { id: '12x12', label: '12×12', price: 99.99, placeholder: 'Name, date, or message' },
+        { id: '17x17', label: '17×17', price: 109.99, placeholder: 'Name, date, or message' },
+        { id: 'jersey', label: 'Jersey', price: 119.99, placeholder: 'Last name and number (e.g., MITCHELL 22)' }
+      ],
+      defaultVariant: '12x12',
+      hasEngraving: true
+    },
+    {
+      id: 'br',
+      name: 'Bat Rack',
+      icon: 'M3 10h18v3H3z M6 13v6 M12 13v6 M18 13v6',
+      variants: [
+        { id: 'regular', label: 'Regular', price: 34.99 },
+        { id: 'team', label: '+Team $5', price: 39.99, placeholder: 'Team (e.g., LA Dodgers)' }
+      ],
+      defaultVariant: 'regular',
+      hasTeamInput: true
+    },
+    { id: 'sp', name: 'Slider Spatula', price: 34.99, icon: 'M8 3h8v9H8z M11 12h2v9h-2z' },
+    { id: 'to', name: 'Splitfinger Tongs', price: 34.99, icon: 'M9 3v11l-2 2v5 M15 3v11l2 2v5' },
+    { id: 'sc', name: 'Brushback Scraper', price: 34.99, icon: 'M5 3h14v5H5z M11 8h2v13h-2z' },
+    { id: 'bo', name: 'Pickoff Bottle Opener', price: 24.99, icon: 'M4 12a4 4 0 1 0 8 0 4 4 0 1 0 -8 0 M12 11h10v2H12z' }
+  ];
+
+  var TIERS = [
+    { key:'starter', name:'Starter', threshold:60, unlocks:['Free standard shipping'] },
+    { key:'allstar', name:'All-Star', threshold:100, unlocks:['Free standard shipping','Premium gift packaging'] },
+    { key:'mvp', name:'MVP', threshold:150, unlocks:['Free standard shipping','Premium gift packaging','Diamond Dirt Rub or 2-day shipping'] },
+    { key:'hof', name:'Hall of Famer', threshold:250, unlocks:['Free standard shipping','Premium gift packaging','Diamond Dirt Rub or 2-day shipping','Lifetime heirloom warranty'] }
+  ];
+
+  function fmt(n) { return '$' + n.toFixed(2); }
+
+  var cart = [];
+  var states = {};
+  PRODUCTS.forEach(function(p){
+    states[p.id] = {
+      variant: p.defaultVariant || null,
+      engraving: '',
+      teamName: ''
+    };
+  });
+
+  // === RENDER PRODUCT CARDS ===
+  var grid = document.getElementById('pbGrid');
+  grid.innerHTML = PRODUCTS.map(function(p){
+    var priceText, variRow = '', engrave = '';
+    if (p.variants) {
+      var defaultV = p.variants.filter(function(v){return v.id === p.defaultVariant;})[0];
+      priceText = fmt(defaultV.price);
+      variRow = '<div class="pb-vari-row">' +
+        p.variants.map(function(v){
+          return '<button type="button" class="pb-vari ' + (v.id === p.defaultVariant ? 'sel' : '') + '" data-variant="' + v.id + '">' + v.label + '</button>';
+        }).join('') +
+        '</div>';
+      if (p.hasEngraving) {
+        engrave = '<input type="text" class="pb-engrave show" placeholder="' + defaultV.placeholder + '" maxlength="40"/>';
+      } else if (p.hasTeamInput) {
+        engrave = '<input type="text" class="pb-engrave" placeholder="Team name" maxlength="30"/>';
+      }
+    } else {
+      priceText = fmt(p.price);
+    }
+    return '<div class="pb-card" data-pid="'+p.id+'">'+
+      '<div class="pb-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="'+p.icon+'"/></svg></div>'+
+      '<p class="pb-name">'+p.name+'</p>'+
+      '<p class="pb-price" data-price>'+priceText+'</p>'+
+      variRow +
+      engrave +
+      '<button type="button" class="pb-add">Add to build</button>'+
+    '</div>';
+  }).join('');
+
+  // === CARD INTERACTIONS ===
+  grid.addEventListener('click', function(e){
+    var card = e.target.closest('.pb-card');
+    if (!card) return;
+    var pid = card.dataset.pid;
+    var state = states[pid];
+    var product = PRODUCTS.filter(function(p){return p.id===pid;})[0];
+
+    if (e.target.classList.contains('pb-vari')) {
+      state.variant = e.target.dataset.variant;
+      card.querySelectorAll('.pb-vari').forEach(function(b){ b.classList.toggle('sel', b.dataset.variant === state.variant); });
+      var selectedV = product.variants.filter(function(v){return v.id === state.variant;})[0];
+      card.querySelector('[data-price]').textContent = fmt(selectedV.price);
+      var inp = card.querySelector('.pb-engrave');
+      if (inp) {
+        if (product.hasEngraving) {
+          inp.placeholder = selectedV.placeholder;
+          inp.classList.add('show');
+        } else if (product.hasTeamInput) {
+          var showTeamInput = state.variant === 'team';
+          inp.classList.toggle('show', showTeamInput);
+          if (!showTeamInput) { state.teamName = ''; inp.value = ''; }
+        }
+      }
+    }
+    if (e.target.classList.contains('pb-add')) {
+      var inp2 = card.querySelector('.pb-engrave');
+      var price = product.price;
+      var variantLabel = '';
+      if (product.variants) {
+        var v = product.variants.filter(function(vv){return vv.id === state.variant;})[0];
+        price = v.price;
+        variantLabel = v.label;
+      }
+      if (product.hasEngraving && inp2) { state.engraving = inp2.value; }
+      if (product.hasTeamInput && state.variant === 'team' && inp2) { state.teamName = inp2.value; }
+      cart.push({
+        id: product.id,
+        name: product.name,
+        price: price,
+        variant: state.variant,
+        variantLabel: variantLabel,
+        engraving: product.hasEngraving ? state.engraving : '',
+        teamName: product.hasTeamInput ? state.teamName : '',
+        icon: product.icon
+      });
+      renderCart();
+    }
+  });
+  grid.addEventListener('input', function(e){
+    if (e.target.classList.contains('pb-engrave')) {
+      var card = e.target.closest('.pb-card');
+      var product = PRODUCTS.filter(function(p){return p.id===card.dataset.pid;})[0];
+      if (product.hasEngraving) { states[card.dataset.pid].engraving = e.target.value; }
+      if (product.hasTeamInput) { states[card.dataset.pid].teamName = e.target.value; }
+    }
+  });
+
+  // === CART + TIER RENDERING ===
+  var cartEl = document.getElementById('pbCart');
+  var totalEl = document.getElementById('pbTotal');
+  var fillEl = document.getElementById('pbFill');
+  var ctaEl = document.getElementById('pbCta');
+
+  function fillPct(sub){
+    if (sub >= 250) return 100;
+    if (sub >= 150) return 75 + ((sub-150)/100)*25;
+    if (sub >= 100) return 50 + ((sub-100)/50)*25;
+    if (sub >= 60)  return 25 + ((sub-60)/40)*25;
+    return (sub/60)*25;
+  }
+
+  function renderCart(){
+    var sub = cart.reduce(function(s,i){return s+i.price;},0);
+    sub = Math.round(sub * 100) / 100;
+    totalEl.textContent = fmt(sub);
+    cartEl.innerHTML = cart.length === 0 ? '<div class="pb-empty">Nothing added yet</div>' :
+      cart.map(function(item, idx){
+        var metaParts = [];
+        if (item.id === 'cb') {
+          var vlabel = { '12x12':'12×12 Engraved', '17x17':'17×17 Engraved', 'jersey':'Jersey' }[item.variant];
+          metaParts.push(vlabel);
+          if (item.engraving) metaParts.push('"' + item.engraving + '"');
+        } else if (item.id === 'br' && item.variant === 'team') {
+          metaParts.push(item.teamName ? 'Team: ' + item.teamName : 'Team variant');
+        }
+        var meta = metaParts.join(' · ');
+        return '<div class="pb-item"><div class="pb-item-row"><span>'+item.name+'</span><span>'+fmt(item.price)+' <button class="pb-rm" data-idx="'+idx+'">✕</button></span></div>'+(meta?'<div class="pb-item-meta">'+meta+'</div>':'')+'</div>';
+      }).join('');
+    fillEl.style.width = fillPct(sub) + '%';
+    document.querySelectorAll('.pb-mk').forEach(function(m){ m.classList.toggle('active', sub >= parseFloat(m.dataset.threshold)); });
+    document.querySelectorAll('.pb-unlock').forEach(function(u){ u.classList.toggle('earned', sub >= parseFloat(u.dataset.threshold)); });
+    ctaEl.disabled = cart.length === 0;
+  }
+  cartEl.addEventListener('click', function(e){
+    if (e.target.classList.contains('pb-rm')) { cart.splice(parseInt(e.target.dataset.idx),1); renderCart(); }
+  });
+  renderCart();
+
+  // === NAVIGATION ===
+  ctaEl.addEventListener('click', function(){
+    if (cart.length === 0) return;
+    renderCheckout();
+    document.getElementById('configurator-screen').classList.add('hidden');
+    document.getElementById('checkout-screen').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  });
+  document.getElementById('navBack').addEventListener('click', function(){
+    document.getElementById('checkout-screen').classList.add('hidden');
+    document.getElementById('configurator-screen').classList.remove('hidden');
+    window.scrollTo(0, 0);
+  });
+
+  // === CHECKOUT RENDER ===
+  function currentTier(total){
+    var tier = null;
+    for (var i = TIERS.length - 1; i >= 0; i--) {
+      if (total >= TIERS[i].threshold) { tier = TIERS[i]; break; }
+    }
+    return tier;
+  }
+  function nextTier(total){
+    for (var i = 0; i < TIERS.length; i++) {
+      if (total < TIERS[i].threshold) return TIERS[i];
+    }
+    return null;
+  }
+
+  function renderCheckout(){
+    var total = cart.reduce(function(s,i){return s+i.price;},0);
+    total = Math.round(total * 100) / 100;
+    var tier = currentTier(total);
+    var next = nextTier(total);
+
+    document.getElementById('coTierTitle').textContent = tier ? 'You unlocked ' + tier.name + ' tier' : 'Add one more piece to earn a tier';
+
+    var unlocksEl = document.getElementById('coUnlocksList');
+    unlocksEl.innerHTML = (tier ? tier.unlocks : []).map(function(u){ return '<div class="co-e-item">' + u + '</div>'; }).join('');
+
+    // MVP bonus choice only if MVP+
+    var choiceBlock = document.getElementById('coChoiceBlock');
+    var showBonusChoice = tier && (tier.key === 'mvp' || tier.key === 'hof');
+    var choiceRow = document.getElementById('coChoiceRow');
+    var choiceLabel = document.getElementById('coChoiceLabel');
+    if (showBonusChoice) {
+      choiceBlock.style.display = 'block';
+      choiceRow.style.display = 'flex';
+      choiceLabel.textContent = 'Pick your ' + tier.name + ' bonus:';
+    } else {
+      choiceBlock.style.display = tier ? 'block' : 'none';
+      if (tier) {
+        choiceRow.style.display = 'none';
+        choiceLabel.textContent = '';
+      }
+    }
+
+    var nextEl = document.getElementById('coNext');
+    if (next) {
+      var remaining = (next.threshold - total).toFixed(2);
+      var newUnlocks = next.unlocks.filter(function(u){ return !tier || tier.unlocks.indexOf(u) === -1; });
+      nextEl.textContent = 'Spend $' + remaining + ' more to unlock ' + next.name + ' — adds ' + (newUnlocks[0] || 'more rewards').toLowerCase();
+    } else {
+      nextEl.textContent = 'You reached the top tier. Every piece in this build carries a lifetime heirloom warranty.';
+    }
+
+    // Build
+    document.getElementById('coBuildTitle').textContent = 'Your build (' + cart.length + ' piece' + (cart.length === 1 ? '' : 's') + ')';
+    var itemsEl = document.getElementById('coItems');
+    itemsEl.innerHTML = cart.map(function(item){
+      var variLabel = '';
+      var engHtml = '';
+      if (item.id === 'cb') {
+        variLabel = { '12x12':'12" × 12" · Text Engraving', '17x17':'17" × 17" · Text Engraving', 'jersey':'Jersey — Last Name &amp; Number' }[item.variant];
+        if (item.engraving) engHtml = '<p class="co-item-engrave">' + escapeHtml(item.engraving) + '</p>';
+      } else if (item.id === 'br') {
+        variLabel = item.variant === 'team' ? (item.teamName ? 'Team: ' + escapeHtml(item.teamName) : 'Team variant') : 'Regular';
+      }
+      return '<div class="co-item">'+
+        '<div class="co-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="'+item.icon+'"/></svg></div>'+
+        '<div>'+
+          '<p class="co-item-name">'+item.name+'</p>'+
+          (variLabel ? '<p class="co-item-vari">'+variLabel+'</p>' : '')+
+          engHtml+
+        '</div>'+
+        '<div class="co-item-price">'+fmt(item.price)+'</div>'+
+      '</div>';
+    }).join('');
+
+    // Guarantees
+    var hasCuttingBoard = cart.some(function(i){return i.id === 'cb';});
+    var guarantees = [];
+    if (hasCuttingBoard) guarantees.push({ title: 'Love it or we re-engrave it', desc: 'Wrong name, typo, or change of heart — free re-engraving within 30 days of delivery.' });
+    if (tier) guarantees.push({ title: '60-day usage swap', desc: 'If he hasn\'t reached for it in 60 days, pick a different piece on us.' });
+    if (tier && tier.key === 'hof') guarantees.push({ title: 'Lifetime heirloom warranty', desc: 'If the wood cracks, the metal fails, or the engraving fades, we replace it — for life.' });
+    document.getElementById('coGuarantees').innerHTML = guarantees.map(function(g){
+      return '<div class="co-g"><p class="co-g-title">'+g.title+'</p><p class="co-g-desc">'+g.desc+'</p></div>';
+    }).join('');
+
+    // Totals
+    var totalsHtml = '<div class="co-t-row"><span>Subtotal</span><span>'+fmt(total)+'</span></div>';
+    var showedShipping = false;
+    if (tier && tier.threshold >= 150 && selectedBonus === 'ship') {
+      totalsHtml += '<div class="co-t-row"><span>2-day expedited shipping</span><span class="co-free">Free — earned</span></div>';
+      showedShipping = true;
+    }
+    if (tier && tier.threshold >= 60 && !showedShipping) {
+      totalsHtml += '<div class="co-t-row"><span>Shipping</span><span class="co-free">Free — earned</span></div>';
+    }
+    if (!tier || tier.threshold < 60) {
+      totalsHtml += '<div class="co-t-row"><span>Shipping</span><span>$7.00</span></div>';
+    }
+    if (tier && tier.threshold >= 100) {
+      totalsHtml += '<div class="co-t-row"><span>Premium gift packaging</span><span class="co-free">Free — earned</span></div>';
+    }
+    if (tier && tier.threshold >= 150 && selectedBonus === 'rub') {
+      totalsHtml += '<div class="co-t-row"><span>Diamond Dirt Rub (included)</span><span class="co-free">Free — earned</span></div>';
+    }
+    var finalTotal = total;
+    if (!tier || tier.threshold < 60) finalTotal = total + 7;
+    totalsHtml += '<div class="co-t-row grand"><span>Total</span><span>'+fmt(finalTotal)+'</span></div>';
+    document.getElementById('coTotals').innerHTML = totalsHtml;
+  }
+
+  function escapeHtml(s){ return s.replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  // === BONUS CHOICE / SHIP TOGGLE ===
+  var selectedBonus = 'ship';
+  document.querySelectorAll('.co-choice').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.co-choice').forEach(function(x){ x.classList.remove('sel'); });
+      b.classList.add('sel');
+      selectedBonus = b.dataset.choice;
+      var delivery = document.getElementById('coDelivery');
+      if (selectedBonus === 'ship') {
+        delivery.textContent = 'Arrives June 10–14 with 2-day expedited shipping';
+      } else {
+        delivery.textContent = 'Arrives June 15–19 with standard shipping + Diamond Dirt Rub included';
+      }
+      renderCheckout();
+    });
+  });
+  document.querySelectorAll('.co-tog').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.co-tog').forEach(function(x){ x.classList.remove('sel'); });
+      b.classList.add('sel');
+    });
+  });
+})();
+</script>
+</body>
+</html>
